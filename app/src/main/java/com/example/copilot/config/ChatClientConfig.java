@@ -2,6 +2,7 @@ package com.example.copilot.config;
 
 import com.example.copilot.tools.ProposalTool;
 import com.example.copilot.tools.RoiTool;
+import com.example.copilot.tools.TaskTool;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -15,15 +16,17 @@ public class ChatClientConfig {
     /**
      * Spring AI auto-configures a ChatClient.Builder backed by the Bedrock
      * Converse ChatModel. The QuestionAnswerAdvisor turns every call into a
-     * RAG call (Phase 1). RoiTool computes margin / ROI / TCO (Phase 2 slice 1);
-     * ProposalTool renders a customer-facing .docx from those figures (slice 2).
-     * The system prompt forces the model to chain: ROI first, then proposal.
+     * RAG call (Phase 1). RoiTool computes margin / ROI / TCO; ProposalTool
+     * renders a .docx from those figures; TaskTool persists follow-up tasks.
+     * The system prompt forces chaining (ROI -> proposal) and gates the
+     * task tool to explicit user requests because it writes.
      */
     @Bean
     public ChatClient chatClient(ChatClient.Builder builder,
                                  VectorStore vectorStore,
                                  RoiTool roiTool,
-                                 ProposalTool proposalTool) {
+                                 ProposalTool proposalTool,
+                                 TaskTool taskTool) {
         SearchRequest searchRequest = SearchRequest.builder()
                 .topK(5)
                 .build();
@@ -52,11 +55,20 @@ public class ChatClientConfig {
                         write the document yourself; never invent or recompute
                         the numbers; never round the margin-tool outputs.
                         Quote the returned file path back to the user.
+
+                        For task / follow-up / action-item creation, call the
+                        task tool ONLY when the user EXPLICITLY asks to create,
+                        track, schedule, or log a task, follow-up, action item,
+                        or to-do. Never create a task speculatively, never as
+                        an implicit side effect of answering a question, and
+                        never to summarize what you just did. When you do
+                        create a task, quote its returned id back to the user
+                        verbatim.
                         """)
                 .defaultAdvisors(QuestionAnswerAdvisor.builder(vectorStore)
                         .searchRequest(searchRequest)
                         .build())
-                .defaultTools(roiTool, proposalTool)
+                .defaultTools(roiTool, proposalTool, taskTool)
                 .build();
     }
 }
