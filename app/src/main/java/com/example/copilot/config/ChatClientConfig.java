@@ -1,5 +1,6 @@
 package com.example.copilot.config;
 
+import com.example.copilot.tools.ProposalTool;
 import com.example.copilot.tools.RoiTool;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
@@ -14,11 +15,15 @@ public class ChatClientConfig {
     /**
      * Spring AI auto-configures a ChatClient.Builder backed by the Bedrock
      * Converse ChatModel. The QuestionAnswerAdvisor turns every call into a
-     * RAG call (Phase 1). The RoiTool is registered via defaultTools so the
-     * model can invoke it for any margin / ROI / TCO arithmetic (Phase 2).
+     * RAG call (Phase 1). RoiTool computes margin / ROI / TCO (Phase 2 slice 1);
+     * ProposalTool renders a customer-facing .docx from those figures (slice 2).
+     * The system prompt forces the model to chain: ROI first, then proposal.
      */
     @Bean
-    public ChatClient chatClient(ChatClient.Builder builder, VectorStore vectorStore, RoiTool roiTool) {
+    public ChatClient chatClient(ChatClient.Builder builder,
+                                 VectorStore vectorStore,
+                                 RoiTool roiTool,
+                                 ProposalTool proposalTool) {
         SearchRequest searchRequest = SearchRequest.builder()
                 .topK(5)
                 .build();
@@ -38,11 +43,20 @@ public class ChatClientConfig {
                         estimate, round, or recompute these figures yourself;
                         if you find yourself doing the math in your head, stop
                         and call the tool instead.
+
+                        When asked to draft, write, produce, or generate a
+                        proposal, quote, or deal summary for a customer, you
+                        MUST chain the tools: first call the reseller margin
+                        tool to obtain the figures, then call the proposal
+                        tool, passing those exact figures verbatim. Never
+                        write the document yourself; never invent or recompute
+                        the numbers; never round the margin-tool outputs.
+                        Quote the returned file path back to the user.
                         """)
                 .defaultAdvisors(QuestionAnswerAdvisor.builder(vectorStore)
                         .searchRequest(searchRequest)
                         .build())
-                .defaultTools(roiTool)
+                .defaultTools(roiTool, proposalTool)
                 .build();
     }
 }
