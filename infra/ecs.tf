@@ -39,7 +39,8 @@ resource "aws_ecs_task_definition" "app" {
         { name = "DB_HOST", value = aws_db_instance.this.address },
         { name = "DB_PORT", value = "5432" },
         { name = "DB_NAME", value = var.db_name },
-        { name = "BEDROCK_CHAT_MODEL", value = var.bedrock_chat_model }
+        { name = "BEDROCK_CHAT_MODEL", value = var.bedrock_chat_model },
+        { name = "BEDROCK_EMBEDDING_MODEL", value = var.bedrock_embedding_model }
       ]
 
       secrets = [

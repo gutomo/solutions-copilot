@@ -49,12 +49,14 @@ resource "aws_iam_role_policy" "task_bedrock" {
         "bedrock:InvokeModel",
         "bedrock:InvokeModelWithResponseStream"
       ]
-      # Cross-region inference needs both the inference-profile and the
-      # underlying foundation-model ARNs. Scoped to Anthropic models.
+      # Cross-region inference (chat) needs both the inference-profile and the
+      # underlying foundation-model ARNs. Embedding models are invoked directly,
+      # so only the foundation-model ARN is needed for Titan.
       Resource = [
         "arn:aws:bedrock:*::foundation-model/anthropic.claude-*",
         "arn:aws:bedrock:*::inference-profile/*.anthropic.claude-*",
-        "arn:aws:bedrock:*:${data.aws_caller_identity.current.account_id}:inference-profile/*"
+        "arn:aws:bedrock:*:${data.aws_caller_identity.current.account_id}:inference-profile/*",
+        "arn:aws:bedrock:*::foundation-model/amazon.titan-embed-text-v2*"
       ]
     }]
   })

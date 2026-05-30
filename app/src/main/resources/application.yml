@@ -27,6 +27,26 @@ spring:
             model: ${BEDROCK_CHAT_MODEL:us.anthropic.claude-haiku-4-5-20251001-v1:0}
             temperature: 0.3
             max-tokens: 1024
+      titan:
+        embedding:
+          # Titan Text Embeddings v2: 1024 dims, matches the vector(1024) column.
+          # No us./jp. inference-profile prefix on embedding models.
+          model: ${BEDROCK_EMBEDDING_MODEL:amazon.titan-embed-text-v2:0}
+          input-type: TEXT
+    # Spring AI 1.0.x picks an embedding implementation via this selector. The
+    # bedrock-titan autoconfig only registers its EmbeddingModel bean when this
+    # is set; without it, the pgvector auto-config has no embedding to wire.
+    model:
+      embedding: bedrock-titan
+    vectorstore:
+      pgvector:
+        # Flyway owns the schema; do not let Spring AI create or alter the table.
+        initialize-schema: false
+        schema-name: public
+        table-name: vector_store
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 1024
 
 management:
   endpoints:

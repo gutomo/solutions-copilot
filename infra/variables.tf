@@ -62,3 +62,11 @@ variable "bedrock_chat_model" {
   type    = string
   default = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
 }
+
+# Embedding models are invoked directly (no us./jp. cross-region inference
+# profile prefix). Titan Text Embeddings v2 returns 1024-dim vectors, which
+# matches the vector(1024) column in the Flyway migration.
+variable "bedrock_embedding_model" {
+  type    = string
+  default = "amazon.titan-embed-text-v2:0"
+}

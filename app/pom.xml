@@ -54,8 +54,32 @@
             <artifactId>spring-ai-starter-model-bedrock-converse</artifactId>
         </dependency>
 
-        <!-- Postgres + Flyway. The pgvector vector-store starter is added in Phase 1:
-             org.springframework.ai:spring-ai-starter-vector-store-pgvector -->
+        <!-- Phase 1 RAG: Amazon Titan Text Embeddings v2 via Bedrock. The Converse
+             starter handles chat; this starter brings in the InvokeModel-based
+             Bedrock autoconfig (Titan + Cohere embeddings). spring-ai-bedrock
+             alone has the classes but not the autoconfig, so the
+             spring.ai.model.embedding=bedrock-titan selector would have no
+             auto-config to activate and no EmbeddingModel bean would be wired. -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-bedrock</artifactId>
+        </dependency>
+
+        <!-- Phase 1 RAG: pgvector-backed VectorStore. Auto-wires when a DataSource
+             and an EmbeddingModel are present on the classpath. -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-vector-store-pgvector</artifactId>
+        </dependency>
+
+        <!-- Phase 1 RAG: QuestionAnswerAdvisor (built-in retrieval advisor). In
+             Spring AI 1.0.x this moved out of the chat-client core into its own
+             module. -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-advisors-vector-store</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jdbc</artifactId>
