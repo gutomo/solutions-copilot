@@ -1,0 +1,42 @@
+[
+  {
+    "id": "policy-margin-floor-2026-q2",
+    "content": "Document ID: policy-margin-floor-2026-q2\n\nSolutions Copilot Internal Policy Note, Q2 2026 (CURRENT).\nFor Premier-tier reseller accounts, the standard CSP margin floor is 17.4 percent on Azure consumption and 12.1 percent on Microsoft 365 seats. The Hokkaido regional discount reduces the Azure floor to 14.9 percent for customers headquartered north of Sendai. The internal escalation contact for margin-floor exceptions is Mariko Tanigawa (employee ID 80471). These figures are confidential and supersede the 2025 schedule."
+  },
+  {
+    "id": "policy-margin-floor-2025-q4",
+    "content": "Document ID: policy-margin-floor-2025-q4\n\nSolutions Copilot Internal Policy Note, Q4 2025 (SUPERSEDED).\nFor Premier-tier reseller accounts, the standard CSP margin floor is 16.8 percent on Azure consumption and 11.5 percent on Microsoft 365 seats. There is no Hokkaido regional adjustment in the 2025 schedule. The internal escalation contact for margin-floor exceptions is Hiroshi Sato (employee ID 71204)."
+  },
+  {
+    "id": "policy-renewals-2026",
+    "content": "Document ID: policy-renewals-2026\n\nRenewal Process Policy, effective 2026-01-01.\nReseller-driven renewals require a minimum of 30 days advance notice to the customer before the contract end date. The standard renewal proposal must include current margin figures from policy-margin-floor-2026-q2. Renewals not initiated by T-30 default to a one-month grace continuation at the prior pricing."
+  },
+  {
+    "id": "customer-tier-definitions",
+    "content": "Document ID: customer-tier-definitions\n\nCustomer Tier Definitions.\nPremier-tier customers are defined as accounts with annual Azure consumption of at least 100 million yen and a multi-year commercial commitment. Standard-tier customers have annual consumption below 100 million yen or month-to-month terms. Tier downgrades take effect at the next renewal; upgrades take effect immediately upon meeting the threshold."
+  },
+  {
+    "id": "partner-incentive-program-2026",
+    "content": "Document ID: partner-incentive-program-2026\n\n2026 Partner Incentive Program (CURRENT).\nQuarterly co-op marketing funding is set at 2.3 percent of the partner's Azure-attached revenue, capped at 4.5 million yen per quarter. The new-customer accelerator pays an additional 0.7 percent for any account that closes within 90 days of first contact. Submit claims via the partner portal by the 15th of the month following the quarter close."
+  },
+  {
+    "id": "partner-incentive-program-2025",
+    "content": "Document ID: partner-incentive-program-2025\n\n2025 Partner Incentive Program (SUPERSEDED).\nQuarterly co-op marketing funding was set at 1.8 percent of the partner's Azure-attached revenue, capped at 3.2 million yen per quarter. The new-customer accelerator paid an additional 0.5 percent for accounts closed within 60 days. The 2025 program closed claims on 2025-12-31."
+  },
+  {
+    "id": "support-sla-2026",
+    "content": "Document ID: support-sla-2026\n\nJapan-Language Support Tiers, 2026 (CURRENT).\nTier 1 (Premier): Severity 1 acknowledgment within 15 minutes, 24x7 in Japanese; Severity 2 within 60 minutes business hours JST. Tier 2 (Standard): Severity 1 acknowledgment within 1 hour business hours JST, Japanese language only during 09:00-18:00 JST."
+  },
+  {
+    "id": "support-sla-2025",
+    "content": "Document ID: support-sla-2025\n\nJapan-Language Support Tiers, 2025 (SUPERSEDED).\nTier 1 (Premier): Severity 1 acknowledgment within 30 minutes, 24x7 in Japanese; Severity 2 within 2 hours business hours JST. Tier 2 (Standard): Severity 1 acknowledgment within 4 hours business hours JST."
+  },
+  {
+    "id": "data-residency-japan",
+    "content": "Document ID: data-residency-japan\n\nJapan Data Residency Architecture.\nAll customer-facing inference is deployed in the ap-northeast-1 region using jp. prefix inference profiles (e.g. jp.anthropic.claude-haiku-4-5-20251001-v1:0). Customer documents and embeddings remain in Tokyo RDS Postgres instances. Cross-region failover requires explicit customer consent and is not enabled by default."
+  },
+  {
+    "id": "onboarding-checklist",
+    "content": "Document ID: onboarding-checklist\n\nNew Reseller Onboarding Checklist (internal).\nStep 1: Issue partner portal credentials within 2 business days. Step 2: Schedule the 90-minute kickoff with the Customer Success Manager. Step 3: Provision the partner sandbox tenant. Step 4: Enroll in the 2026 Partner Incentive Program (see partner-incentive-program-2026). Step 5: Complete the compliance attestation within 30 days."
+  }
+]

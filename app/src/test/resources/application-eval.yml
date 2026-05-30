@@ -1,0 +1,40 @@
+# Phase 3 slice 1: eval profile. application.yml's chat options (temperature
+# 0.3 etc) are inherited unchanged so the subject runs at production config.
+# Only the judge model and output paths are configured here.
+
+spring:
+  datasource:
+    # Eval runs against a DEDICATED throwaway DB (copilot_eval on the eval-pg
+    # sidecar), NEVER the dev copilot-pg. These defaults deliberately point away
+    # from the dev DB (5432/copilot) so even a stray `mvn test -Peval` with no
+    # env set cannot truncate dev data. run-eval.sh sets DB_HOST/DB_PORT for the
+    # in-container run over the shared docker network.
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:copilot_eval}
+    username: ${DB_USERNAME:copilot}
+    password: ${DB_PASSWORD:copilot}
+
+  ai:
+    vectorstore:
+      pgvector:
+        # Same as prod: Flyway owns the schema; the test container starts empty,
+        # Flyway runs V1->V3, the harness seeds the corpus via IngestionService.
+        initialize-schema: false
+
+eval:
+  judge:
+    # Default = same Haiku as the subject so the harness runs without any
+    # additional Bedrock model-access grant. For a stronger judge, set
+    # EVAL_JUDGE_MODEL to a Sonnet/Opus inference profile id (requires its
+    # own model-access grant in the Bedrock console).
+    model: ${EVAL_JUDGE_MODEL:jp.anthropic.claude-haiku-4-5-20251001-v1:0}
+  output:
+    json: target/eval-report.json
+    markdown: target/eval-report.md
+
+logging:
+  level:
+    com.example.copilot.eval: INFO
+    com.example.copilot.tools: WARN
+    com.example.copilot.tasks: WARN
+    org.testcontainers: WARN
+    org.flywaydb: WARN

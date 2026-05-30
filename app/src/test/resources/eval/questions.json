@@ -1,0 +1,162 @@
+[
+  {
+    "id": "q01-margin-azure-current",
+    "question": "What is the current Azure margin floor for Premier-tier reseller accounts? Cite the source identifier.",
+    "answerable": true,
+    "expected_sources": ["policy-margin-floor-2026-q2"],
+    "required_facts": ["17.4"],
+    "forbidden_facts": ["16.8"]
+  },
+  {
+    "id": "q02-margin-m365-current",
+    "question": "What is the current Microsoft 365 seat margin floor for Premier-tier? Cite the source identifier.",
+    "answerable": true,
+    "expected_sources": ["policy-margin-floor-2026-q2"],
+    "required_facts": ["12.1"],
+    "forbidden_facts": ["11.5"]
+  },
+  {
+    "id": "q03-hokkaido-rule",
+    "question": "Describe the Hokkaido regional discount rule. Cite the source identifier.",
+    "answerable": true,
+    "expected_sources": ["policy-margin-floor-2026-q2"],
+    "required_facts": ["14.9", "Hokkaido"],
+    "forbidden_facts": []
+  },
+  {
+    "id": "q04-escalation-current",
+    "question": "Who is the current escalation contact for margin-floor exceptions, and what is their employee ID? Cite the source identifier.",
+    "answerable": true,
+    "expected_sources": ["policy-margin-floor-2026-q2"],
+    "required_facts": ["Mariko Tanigawa", "80471"],
+    "forbidden_facts": ["Hiroshi Sato", "71204"]
+  },
+  {
+    "id": "q05-renewal-notice",
+    "question": "How many days of advance notice are required for reseller-driven renewals? Cite the source identifier.",
+    "answerable": true,
+    "expected_sources": ["policy-renewals-2026"],
+    "required_facts": ["30 days"],
+    "forbidden_facts": []
+  },
+  {
+    "id": "q06-premier-tier-definition",
+    "question": "What defines a Premier-tier customer? Cite the source identifier.",
+    "answerable": true,
+    "expected_sources": ["customer-tier-definitions"],
+    "required_facts": ["100 million yen"],
+    "forbidden_facts": []
+  },
+  {
+    "id": "q07-incentive-rate-current",
+    "question": "What is the current quarterly co-op marketing funding rate? Cite the source identifier.",
+    "answerable": true,
+    "expected_sources": ["partner-incentive-program-2026"],
+    "required_facts": ["2.3"],
+    "forbidden_facts": ["1.8"]
+  },
+  {
+    "id": "q08-sev1-premier-current",
+    "question": "What is the Severity 1 acknowledgment SLA for Premier customers under the current support policy? Cite the source identifier.",
+    "answerable": true,
+    "expected_sources": ["support-sla-2026"],
+    "required_facts": ["15 minutes"],
+    "forbidden_facts": ["30 minutes"]
+  },
+  {
+    "id": "q09-margin-azure-2025-historical",
+    "question": "What was the Azure margin floor under the superseded 2025 schedule? Cite the source identifier of the superseded document.",
+    "answerable": true,
+    "expected_sources": ["policy-margin-floor-2025-q4"],
+    "required_facts": ["16.8"],
+    "forbidden_facts": ["17.4"]
+  },
+  {
+    "id": "q10-incentive-cap-current",
+    "question": "What is the cap on quarterly co-op marketing funding under the current program? Cite the source identifier.",
+    "answerable": true,
+    "expected_sources": ["partner-incentive-program-2026"],
+    "required_facts": ["4.5 million"],
+    "forbidden_facts": ["3.2 million"]
+  },
+  {
+    "id": "q11-accelerator-window-current",
+    "question": "How long is the new-customer accelerator window in the current 2026 incentive program? Cite the source identifier.",
+    "answerable": true,
+    "expected_sources": ["partner-incentive-program-2026"],
+    "required_facts": ["90 days"],
+    "forbidden_facts": ["60 days"]
+  },
+  {
+    "id": "q12-sev2-current",
+    "question": "What is the Severity 2 SLA for Premier under the current support tiers? Cite the source identifier.",
+    "answerable": true,
+    "expected_sources": ["support-sla-2026"],
+    "required_facts": ["60 minutes"],
+    "forbidden_facts": ["2 hours"]
+  },
+  {
+    "id": "q13-renewal-margin-source",
+    "question": "When preparing a renewal proposal, which source document holds the margin figures the proposal should use? Quote the source identifier.",
+    "answerable": true,
+    "expected_sources": ["policy-renewals-2026", "policy-margin-floor-2026-q2"],
+    "required_facts": ["policy-margin-floor-2026-q2"],
+    "forbidden_facts": ["policy-margin-floor-2025-q4"]
+  },
+  {
+    "id": "q14-onboarding-incentive-source",
+    "question": "During onboarding, which incentive program should new resellers enroll in? Quote the source identifier.",
+    "answerable": true,
+    "expected_sources": ["onboarding-checklist", "partner-incentive-program-2026"],
+    "required_facts": ["partner-incentive-program-2026"],
+    "forbidden_facts": ["partner-incentive-program-2025"]
+  },
+  {
+    "id": "q15-aws-margin-unanswerable",
+    "question": "What is our margin floor for AWS resellers?",
+    "answerable": false,
+    "expected_sources": [],
+    "required_facts": ["don't", "no information", "not in", "cannot find", "do not have", "not specified", "not mentioned", "no data", "doesn't contain", "does not"],
+    "forbidden_facts": ["17.4", "AWS margin floor is"]
+  },
+  {
+    "id": "q16-gcp-pricing-unanswerable",
+    "question": "What is our pricing for Google Cloud resellers?",
+    "answerable": false,
+    "expected_sources": [],
+    "required_facts": ["don't", "no information", "not in", "cannot find", "do not have", "not specified", "not mentioned", "no data", "doesn't contain", "does not"],
+    "forbidden_facts": []
+  },
+  {
+    "id": "q17-signing-bonus-unanswerable",
+    "question": "Is there a day-one signing bonus for new partners?",
+    "answerable": false,
+    "expected_sources": [],
+    "required_facts": ["don't", "no information", "not in", "cannot find", "do not have", "not specified", "not mentioned", "no data", "doesn't contain", "does not", "no signing bonus"],
+    "forbidden_facts": ["yes, the bonus is", "the bonus is "]
+  },
+  {
+    "id": "q18-current-escalation-citation",
+    "question": "Who handles current margin escalations, and from which source document? Cite the source identifier.",
+    "answerable": true,
+    "expected_sources": ["policy-margin-floor-2026-q2"],
+    "required_facts": ["Mariko Tanigawa", "policy-margin-floor-2026-q2"],
+    "forbidden_facts": ["Hiroshi Sato", "policy-margin-floor-2025-q4"]
+  },
+  {
+    "id": "q19-current-accelerator-citation",
+    "question": "What is the current new-customer accelerator percentage and which source document defines it? Cite the source identifier.",
+    "answerable": true,
+    "expected_sources": ["partner-incentive-program-2026"],
+    "required_facts": ["0.7", "partner-incentive-program-2026"],
+    "forbidden_facts": ["0.5", "partner-incentive-program-2025"]
+  },
+  {
+    "id": "q20-current-sev1-citation",
+    "question": "What is the current Severity 1 acknowledgment SLA for Premier and which source document defines it? Cite the source identifier.",
+    "answerable": true,
+    "expected_sources": ["support-sla-2026"],
+    "required_facts": ["15 minutes", "support-sla-2026"],
+    "forbidden_facts": ["30 minutes", "support-sla-2025"]
+  }
+]
