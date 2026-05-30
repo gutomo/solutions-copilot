@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: solutions-copilot
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:copilot}
+    username: ${DB_USERNAME:copilot}
+    password: ${DB_PASSWORD:copilot}
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  ai:
+    bedrock:
+      aws:
+        # Region is required. Credentials are intentionally omitted so the AWS
+        # default provider chain resolves them from the ECS task role at runtime.
+        region: ${AWS_REGION:us-east-1}
+      converse:
+        chat:
+          options:
+            # Confirm the exact inference-profile ID for your region in the
+            # Bedrock console (Model catalog -> Inference profiles).
+            # Japan data residency: swap the us. prefix for jp. and deploy in
+            # ap-northeast-1, e.g. jp.anthropic.claude-haiku-4-5-20251001-v1:0
+            model: ${BEDROCK_CHAT_MODEL:us.anthropic.claude-haiku-4-5-20251001-v1:0}
+            temperature: 0.3
+            max-tokens: 1024
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+server:
+  port: 8080

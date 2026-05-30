@@ -1,0 +1,8 @@
+project_name = "solutions-copilot"
+region       = "us-east-1"
+
+# For Japan data residency, deploy in Tokyo and use a jp. inference profile:
+# region             = "ap-northeast-1"
+# bedrock_chat_model = "jp.anthropic.claude-haiku-4-5-20251001-v1:0"
+
+desired_count = 1
