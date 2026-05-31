@@ -127,6 +127,22 @@ public class Scorers {
     }
 
     // ---- Deterministic: answer correctness vs required/forbidden facts ----
+    // Slice 2: forbidden_facts only penalize when asserted as the CURRENT
+    // answer. A forbidden value labeled as historical ("previously", "2025",
+    // "superseded") is acceptable -- the model is correctly disambiguating,
+    // not leaking the stale figure as the answer. required_facts stays the
+    // deterministic backstop: if the current value is absent, correctness
+    // still bites (this is what catches the planted stale-leak case).
+
+    private static final List<String> HISTORY_MARKERS = List.of(
+            "previous", "prior", "previously", "formerly", "earlier",
+            "old", "older", "historical", "historic", "legacy",
+            "superseded", "obsolete", "outdated", "deprecated",
+            "2025",
+            "was ", " were ", "had been", "used to be",
+            "no longer", "before"
+    );
+    private static final int CONTEXT_WINDOW = 80;
 
     public CorrectnessScore correctness(boolean answerable,
                                         List<String> requiredFacts,
@@ -153,12 +169,36 @@ public class Scorers {
         if (forbiddenFacts.isEmpty()) {
             forbiddenScore = 1.0;
         } else {
-            long forbiddenHits = forbiddenFacts.stream()
-                    .filter(f -> lower.contains(f.toLowerCase(Locale.ROOT)))
+            long unmarkedHits = forbiddenFacts.stream()
+                    .filter(f -> hasUnmarkedOccurrence(lower, f.toLowerCase(Locale.ROOT)))
                     .count();
-            forbiddenScore = 1.0 - ((double) forbiddenHits / forbiddenFacts.size());
+            forbiddenScore = 1.0 - ((double) unmarkedHits / forbiddenFacts.size());
         }
 
         return new CorrectnessScore(requiredScore, forbiddenScore, requiredScore * forbiddenScore);
+    }
+
+    /**
+     * True iff the forbidden term occurs at least once in the answer with NO
+     * history marker within +/- CONTEXT_WINDOW chars of that occurrence.
+     * A single unmarked occurrence penalizes the term -- "current is X, was Y
+     * in 2025" doesn't, but "the answer is Y" does.
+     */
+    private static boolean hasUnmarkedOccurrence(String lowerAnswer, String lowerForbidden) {
+        int idx = 0;
+        while (true) {
+            int pos = lowerAnswer.indexOf(lowerForbidden, idx);
+            if (pos < 0) {
+                return false;
+            }
+            int wStart = Math.max(0, pos - CONTEXT_WINDOW);
+            int wEnd = Math.min(lowerAnswer.length(), pos + lowerForbidden.length() + CONTEXT_WINDOW);
+            String window = lowerAnswer.substring(wStart, wEnd);
+            boolean marked = HISTORY_MARKERS.stream().anyMatch(window::contains);
+            if (!marked) {
+                return true;
+            }
+            idx = pos + lowerForbidden.length();
+        }
     }
 }

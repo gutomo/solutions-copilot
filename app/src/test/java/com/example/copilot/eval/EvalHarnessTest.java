@@ -34,13 +34,13 @@ import org.springframework.test.context.ActiveProfiles;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Slice 1 connects to a sidecar `eval-pg` started outside the test (port 5433,
- * database `copilot_eval`) instead of Testcontainers, because Docker Desktop
- * on Windows returns malformed responses to Linux-container Testcontainers
- * clients via the mounted socket. The launcher script starts a fresh eval-pg
- * per run, so the harness only truncates vector_store before seeding to
- * guarantee a known starting state. Slice 4 / CI on Linux runners will
- * switch this to a real Testcontainers @Container.
+ * Connects to a dedicated pgvector DB via env-wired DB_HOST / DB_PORT / DB_NAME
+ * (application-eval.yml defaults to port 5433 / database "copilot_eval"). Locally
+ * a sidecar `eval-pg` runs on host port 5433 (started by run-eval.sh /
+ * run-eval.ps1); the harness TRUNCATEs vector_store, asserts it is on
+ * "copilot_eval" before doing so, then seeds via IngestionService. Slice 2's
+ * CI workflow points the same env wiring at a GitHub Actions pgvector service
+ * container -- no Testcontainers needed in either path.
  */
 @SpringBootTest
 @ActiveProfiles("eval")

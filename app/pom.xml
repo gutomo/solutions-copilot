@@ -166,5 +166,25 @@
                 </plugins>
             </build>
         </profile>
+
+        <!-- `mvn test -Pgate` runs ONLY @Tag("gate") tests (EvalGateTest).
+             Runs AFTER `mvn test -Peval` has produced target/eval-report.json;
+             reads that report + src/test/resources/eval-thresholds.yml and
+             fails the build on any HARD threshold breach. -->
+        <profile>
+            <id>gate</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <groups>gate</groups>
+                            <excludedGroups combine.self="override"></excludedGroups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 </project>
