@@ -1,0 +1,22 @@
+{
+  "_fixture": "green — every metric above its floor, no item below the per-item faithfulness floor, no judge parse failures. Designed to pass eval-thresholds.yml as it ships AND tightened relevance thresholds slice 3 may apply.",
+  "timestamp": "2026-05-31T00:00:00Z",
+  "subjectModel": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "judgeModel": "us.anthropic.claude-sonnet-4-6",
+  "aggregate": {
+    "totalItems": 4,
+    "judgeParseFailures": 0,
+    "meanFaithfulness": 99.0,
+    "meanRelevance": 90.0,
+    "meanCorrectness": 0.95,
+    "meanCitationF1": 1.00,
+    "meanRetrievalRecall": 1.00,
+    "goodCitationRate": 1.00
+  },
+  "items": [
+    {"id": "fx-1", "faithfulnessScore": 100},
+    {"id": "fx-2", "faithfulnessScore":  98},
+    {"id": "fx-3", "faithfulnessScore": 100},
+    {"id": "fx-4", "faithfulnessScore":  98}
+  ]
+}

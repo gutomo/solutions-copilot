@@ -134,13 +134,18 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
-            <!-- Default: exclude @Tag("eval") tests so `mvn test` never runs the
-                 eval. The `eval` profile below overrides this. -->
+            <!-- Default: exclude @Tag("eval") and @Tag("gate") so `mvn test`
+                 never runs either the live eval (needs Bedrock + DB) or the
+                 live gate (needs target/eval-report.json on disk). The plain
+                 EvalGateFixtureTest has no tag and so DOES run in default; it
+                 covers the gate's logic against committed fixtures with no IO
+                 dependencies. The `eval` and `gate` profiles below override
+                 the exclusion to opt back in. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <excludedGroups>eval</excludedGroups>
+                    <excludedGroups>eval,gate</excludedGroups>
                 </configuration>
             </plugin>
         </plugins>

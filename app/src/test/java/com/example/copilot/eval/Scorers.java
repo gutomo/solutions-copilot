@@ -56,20 +56,38 @@ public class Scorers {
     }
 
     // ---- LLM-as-judge: relevance ----
+    // Slice 3: passes the SAME retrieved context as faithfulness, and the
+    // rubric explicitly forbids the judge from scoring factual accuracy
+    // (which is faithfulness's job). Slice 2's relevance was context-starved
+    // and scored specific correct facts -- document IDs, percentages -- as
+    // "fabrication", tanking grounded answers (q01=12, q02=15, q07=22) while
+    // faithfulness, which DID get context, scored the same answers ~100.
 
-    public JudgeScore relevance(String question, String answer) {
+    public JudgeScore relevance(String question, String answer, List<Document> retrieved) {
+        String context = retrieved.stream()
+                .map(d -> "[source=" + d.getMetadata().get("source") + "] " + d.getText())
+                .collect(Collectors.joining("\n\n---\n\n"));
         String prompt = """
-                You are evaluating whether an answer addresses the question,
-                regardless of factual accuracy. Score 0-100. 100 means the answer
-                directly engages with what was asked. A clear and appropriate
-                refusal (the question cannot be answered from the available
-                material) scores 80. An off-topic answer scores 0. Output ONLY
-                one line in the exact form:
-                SCORE=<int> REASON=<one short sentence>
+                You are evaluating whether an answer ENGAGES with the question.
+                You are NOT evaluating factual accuracy -- a separate metric
+                (faithfulness) handles grounding. Do not penalize specific
+                numbers, IDs, percentages, or names; factuality is not your
+                concern here. Score 0-100:
+                  100  the answer directly addresses what was asked
+                   80  the answer is an appropriate refusal because the topic is
+                        not covered by the available material
+                    0  completely off-topic (e.g. weather when asked about margins)
+
+                CONTEXT (top-5 retrieved chunks, provided ONLY so you do not
+                mistake correct facts for fabrication; do NOT score factual
+                accuracy from it):
+                %s
 
                 QUESTION: %s
                 ANSWER: %s
-                """.formatted(question, answer);
+
+                Output ONLY one line: SCORE=<int> REASON=<one short sentence>
+                """.formatted(context, question, answer);
         return parse(judge.call(prompt));
     }
 

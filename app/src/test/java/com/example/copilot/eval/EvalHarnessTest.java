@@ -143,7 +143,7 @@ class EvalHarnessTest {
                     .collect(Collectors.toList());
 
             var faith = scorers.faithfulness(q.question(), answer, retrieved);
-            var rel   = scorers.relevance(q.question(), answer);
+            var rel   = scorers.relevance(q.question(), answer, retrieved);
             var corr  = scorers.correctness(q.answerable(), q.requiredFacts(), q.forbiddenFacts(), answer);
             var cite  = scorers.citation(answer, q.expectedSources(), allCorpusIds);
             double retRecall = scorers.retrievalRecall(q.expectedSources(), retrieved);
@@ -215,7 +215,7 @@ class EvalHarnessTest {
 
         // ---- 4. Off-topic answer: relevance should drop ----
         String offTopicA = "The weather in Tokyo is mild today with a chance of light rain.";
-        var relBad = scorers.relevance(halluQ, offTopicA);
+        var relBad = scorers.relevance(halluQ, offTopicA, retrieved);
         System.out.printf("[planted:off-topic] relevance=%d reason=%s%n",
                 relBad.score(), relBad.reason());
 

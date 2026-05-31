@@ -1,37 +1,38 @@
-# Phase 3 slice 2 hard gate thresholds.
-# Loaded by EvalGateTest via classpath (src/test/resources/eval-thresholds.yml).
-# Numbers derived from the Sonnet-judge baseline locked 2026-05-31:
+# Phase 3 slice 3 hard gate thresholds.
+# Loaded by EvalGateTest (live) AND EvalGateFixtureTest (committed fixtures).
+# Numbers derived from the Sonnet-judge baseline locked 2026-05-31 (slice 3):
 #   subject = us.anthropic.claude-haiku-4-5-20251001-v1:0  (temp 0.3, prod config)
 #   judge   = us.anthropic.claude-sonnet-4-6               (temp 0)
 #   region  = us-east-1                                    (matches CI)
 #
-# Observed baseline:
-#   meanFaithfulness=99.9  perItemFaithfulnessMin=98
-#   meanCitationF1=1.00    meanRetrievalRecall=1.00
-#   meanCorrectness=1.00   meanRelevance=59.6
-#       NOTE: the 59.6 is NOT a verbosity / long-form effect. The relevance
-#       judge is passed only question+answer (NO retrieved context), so it
-#       treats specific correct facts (document IDs, percentages) as
-#       "fabrication" and tanks exactly those items (q01=12, q02=15, q07=22) --
-#       even though faithfulness, which DOES get the context, scores the same
-#       answers ~100. Kept report-only because it is not a trustworthy signal
-#       yet. Slice-3 fix: feed the relevance judge the retrieved context, as
-#       faithfulness does (or otherwise decouple it from perceived factuality).
+# Observed baseline (slice 3 — relevance judge now receives the same retrieved
+# context as faithfulness, and its rubric explicitly forbids scoring factuality):
+#   meanFaithfulness=100.0  perItemFaithfulnessMin=100
+#   meanCitationF1=0.98     meanRetrievalRecall=1.00
+#   meanCorrectness=0.95    meanRelevance=97.8 (promoted to HARD this slice -- see below)
 #   judgeParseFailures=0
 #
-# Margins: ~10pt below observed for mean-of-score metrics, 0.10-0.15 for
-# fraction metrics. Subject runs at temp 0.3 so item-level drift is real (up to
-# 10pt per item); the per-item faithfulness floor (60) is well below clean
-# answers (~100) but well above hallucinations (~5), so it bites only on real
-# failures.
+# Relevance gating decision (slice 3): PROMOTED from report-only to HARD.
+# Rule met: answerable-item relevance ~100, planted off-topic 0, refusals
+# all in [80,95], spread ~0pt. Floor 80 = observed 97.8 minus 15pt margin
+# (relevance is judge-driven; widest margin among the gated metrics).
+# Previously (slice 2) relevance was report-only because the judge was
+# context-starved and scored specific correct facts as "fabrication" --
+# that failure mode is now removed.
+#
+# Margins: ~10pt below observed for mean-of-score metrics (15pt for relevance),
+# 0.10-0.15 for fraction metrics. Subject runs at temp 0.3 so item-level
+# drift is real (up to 10pt per item); the per-item faithfulness floor (60)
+# is well below clean answers (~100) but well above hallucinations (~5), so
+# it bites only on real failures.
 #
 # Re-baseline (and rewrite this file) whenever the corpus, the subject model,
-# or the judge model changes.
+# or the judge model change.
 
 meanFaithfulness:    {floor: 90,   hard: true}
 perItemFaithfulness: {floor: 60,   hard: true}
 meanCitationF1:      {floor: 0.85, hard: true}
 meanRetrievalRecall: {floor: 0.90, hard: true}
 meanCorrectness:     {floor: 0.85, hard: true}
-meanRelevance:       {floor: 50,   hard: false}     # report-only; relevance judge is context-starved (see header) -- not a trustworthy signal yet
+meanRelevance:       {floor: 80,   hard: true}     # slice 3: promoted to HARD after the context-aware fix
 judgeParseFailures:  {ceiling: 2,  hard: true}
