@@ -52,7 +52,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics
   endpoint:
     health:
       probes:
@@ -60,3 +60,24 @@ management:
 
 server:
   port: 8080
+
+# Phase 4 slice 1: per-request token + cost accounting.
+# Rates are configurable here -- NOT hardcoded -- so an operator can edit
+# without rebuilding. Map keys are Bedrock model / inference-profile ids; the
+# bracket-escape form is required for YAML map keys containing dots.
+# Numbers below are illustrative (derived from Anthropic list pricing): real
+# Bedrock cross-region inference may differ; verify against your billing
+# console and update as needed. Unknown model at request time -> WARN once
+# per request, $0 contribution, but tokens still counted.
+copilot:
+  cost:
+    rates:
+      "[jp.anthropic.claude-haiku-4-5-20251001-v1:0]":
+        input-per-1k:  0.001
+        output-per-1k: 0.005
+      "[us.anthropic.claude-haiku-4-5-20251001-v1:0]":
+        input-per-1k:  0.001
+        output-per-1k: 0.005
+      "[us.anthropic.claude-sonnet-4-6]":
+        input-per-1k:  0.003
+        output-per-1k: 0.015
