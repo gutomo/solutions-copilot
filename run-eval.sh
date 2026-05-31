@@ -26,6 +26,11 @@ BEDROCK_CHAT_MODEL="${BEDROCK_CHAT_MODEL:-jp.anthropic.claude-haiku-4-5-20251001
 EVAL_JUDGE_MODEL="${EVAL_JUDGE_MODEL:-jp.anthropic.claude-haiku-4-5-20251001-v1:0}"
 AWS_DIR="${AWS_DIR:-$HOME/.aws}"
 
+# Slice 4 dashboard: pass the host's git short-SHA into the container so the
+# report header + history aren't permanently "unknown". git is not installed
+# in the maven container, so env-injection is the only path that works.
+GIT_SHA="${GIT_SHA:-$(git rev-parse --short HEAD 2>/dev/null || echo unknown)}"
+
 cd "$(dirname "$0")"
 
 echo "==> recreating eval sidecar + network (dev copilot-pg is untouched)"
@@ -60,6 +65,7 @@ docker run --rm --network "$NETWORK" \
   -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
   -e BEDROCK_CHAT_MODEL="$BEDROCK_CHAT_MODEL" \
   -e EVAL_JUDGE_MODEL="$EVAL_JUDGE_MODEL" \
+  -e GIT_SHA="$GIT_SHA" \
   "$MAVEN_IMAGE" \
   mvn test -Peval
 
@@ -78,5 +84,7 @@ fi
 echo "==> done. Report:"
 echo "      app/target/eval-report.json"
 echo "      app/target/eval-report.md"
+echo "      app/target/eval-report.html   (open in a browser)"
+echo "    history appended: app/eval-history.jsonl"
 echo "    inspect DB:  docker exec -it $PG psql -U copilot -d copilot_eval"
 echo "    tear down:   docker rm -f $PG && docker network rm $NETWORK"

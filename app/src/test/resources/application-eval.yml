@@ -30,6 +30,12 @@ eval:
   output:
     json: target/eval-report.json
     markdown: target/eval-report.md
+    html: target/eval-report.html
+  history:
+    # Slice 4: aggregate-only one-line-per-run JSONL. MUST live under app/
+    # (the eval's CWD inside the maven container is /app, mounted from
+    # ./app on the host); paths outside that mount would be lost on append.
+    file: eval-history.jsonl
 
 logging:
   level:

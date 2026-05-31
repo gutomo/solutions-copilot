@@ -27,6 +27,16 @@ $ChatModel  = if ($env:BEDROCK_CHAT_MODEL) { $env:BEDROCK_CHAT_MODEL } else { 'j
 $JudgeModel = if ($env:EVAL_JUDGE_MODEL)   { $env:EVAL_JUDGE_MODEL }   else { 'jp.anthropic.claude-haiku-4-5-20251001-v1:0' }
 $AwsDir     = if ($env:AWS_DIR)            { $env:AWS_DIR }            else { Join-Path $env:USERPROFILE '.aws' }
 
+# Slice 4 dashboard: pass the host's git short-SHA into the container so the
+# report header + history aren't permanently "unknown". git is not installed
+# in the maven container, so env-injection is the only path that works.
+if ($env:GIT_SHA) {
+  $GitSha = $env:GIT_SHA
+} else {
+  $GitSha = (git rev-parse --short HEAD 2>$null)
+  if (-not $GitSha) { $GitSha = 'unknown' }
+}
+
 if ($PSScriptRoot) { Set-Location $PSScriptRoot }
 
 Write-Host '==> recreating eval sidecar + network (dev copilot-pg is untouched)'
@@ -67,6 +77,7 @@ docker run --rm --network $Network `
   -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN `
   -e BEDROCK_CHAT_MODEL=$ChatModel `
   -e EVAL_JUDGE_MODEL=$JudgeModel `
+  -e GIT_SHA=$GitSha `
   $MavenImage `
   mvn test -Peval
 
@@ -82,5 +93,7 @@ if (-not (Test-Path 'app\target\eval-report.json')) {
 Write-Host '==> done. Report:'
 Write-Host '      app\target\eval-report.json'
 Write-Host '      app\target\eval-report.md'
+Write-Host '      app\target\eval-report.html   (open in a browser)'
+Write-Host '    history appended: app\eval-history.jsonl'
 Write-Host "    inspect DB:  docker exec -it $Pg psql -U copilot -d copilot_eval"
 Write-Host "    tear down:   docker rm -f $Pg; docker network rm $Network"

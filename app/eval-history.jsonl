@@ -1,0 +1,10 @@
+# Phase 3 slice 4: aggregate-only one-line-per-run history. The eval harness
+# (EvalHarnessTest) appends one JSON line per run; lines starting with # are
+# ignored by EvalReport.readHistory. The HTML dashboard renders trend
+# sparklines when this file has >= 2 entries. Local nightly runs grow this
+# file; CI write-back is deferred (CI runs would currently produce a trend
+# only in their artifact because the workflow doesn't commit back).
+# Seeded below with the slice-3 baseline so the trend renders on the very
+# first run after slice 4 lands.
+{"timestamp":"2026-05-31T03:57:59Z","gitSha":"bdd4463","subject":"us.anthropic.claude-haiku-4-5-20251001-v1:0","judge":"us.anthropic.claude-sonnet-4-6","meanFaithfulness":100.0,"meanRelevance":97.75,"meanCorrectness":0.95,"meanCitationF1":0.98,"meanRetrievalRecall":1.0,"judgeParseFailures":0}
+{"timestamp":"2026-05-31T05:11:44.921135185Z","gitSha":"bdd4463","subject":"us.anthropic.claude-haiku-4-5-20251001-v1:0","judge":"us.anthropic.claude-sonnet-4-6","meanFaithfulness":100.0,"meanRelevance":97.1,"meanCorrectness":1.0,"meanCitationF1":0.9833333333333334,"meanRetrievalRecall":1.0,"judgeParseFailures":0}

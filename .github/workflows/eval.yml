@@ -105,6 +105,7 @@ jobs:
           path: |
             app/target/eval-report.json
             app/target/eval-report.md
+            app/target/eval-report.html
           if-no-files-found: warn
 
       - name: Enforce thresholds (gate)

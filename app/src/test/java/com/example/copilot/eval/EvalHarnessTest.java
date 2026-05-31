@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import com.example.copilot.ingest.IngestionService;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -30,6 +31,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.yaml.snakeyaml.Yaml;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -61,6 +63,8 @@ class EvalHarnessTest {
     @Value("${spring.ai.bedrock.converse.chat.options.model}") String subjectModel;
     @Value("${eval.output.json}")     String jsonPath;
     @Value("${eval.output.markdown}") String mdPath;
+    @Value("${eval.output.html}")     String htmlPath;
+    @Value("${eval.history.file}")    String historyPath;
 
     public record CorpusDoc(String id, String content) {}
 
@@ -158,8 +162,10 @@ class EvalHarnessTest {
                     retRecall));
         }
 
+        String gitSha = resolveGitSha();
         EvalReport.Report report = new EvalReport.Report(
                 OffsetDateTime.now(),
+                gitSha,
                 subjectModel,
                 judge.judgeModelId(),
                 EvalReport.aggregate(items),
@@ -168,13 +174,59 @@ class EvalHarnessTest {
         EvalReport.printConsole(report);
         EvalReport.writeJson(Path.of(jsonPath), report);
         EvalReport.writeMarkdown(Path.of(mdPath), report);
-        log.info("[eval] wrote {} and {}", jsonPath, mdPath);
 
-        // The only assertion: the harness completed and the report has all 20
-        // items. No score gating in slice 1.
+        // Slice 4: dashboard. Run the SAME gate logic the CI gate uses so card
+        // coloring is guaranteed to match what `mvn test -Pgate` enforces.
+        JsonNode reportNode = jsonMapper.valueToTree(report);
+        Map<String, Object> thresholds;
+        try (InputStream in = new ClassPathResource("eval-thresholds.yml").getInputStream()) {
+            thresholds = new Yaml().load(in);
+        }
+        GateEvaluator.Outcome gate = GateEvaluator.evaluate(reportNode, thresholds);
+
+        // Read prior runs; include the current run in the rendered trend so the
+        // dashboard shows it as the rightmost point. Append AFTER rendering so
+        // future runs see this one in their history.
+        Path historyFile = Path.of(historyPath);
+        List<EvalReport.HistoryEntry> prior = EvalReport.readHistory(historyFile);
+        EvalReport.HistoryEntry current = EvalReport.HistoryEntry.fromReport(report);
+        List<EvalReport.HistoryEntry> historyForRender = new ArrayList<>(prior);
+        historyForRender.add(current);
+
+        EvalReport.writeHtml(Path.of(htmlPath), report, gate, historyForRender);
+        EvalReport.appendHistory(historyFile, current);
+
+        log.info("[eval] wrote {}, {}, {}; appended 1 row to {} (now {} entries)",
+                jsonPath, mdPath, htmlPath, historyPath, prior.size() + 1);
+
+        // The only assertion: the harness completed and all outputs were written.
+        // No score gating here -- that's EvalGateTest's job under -Pgate.
         assertThat(items).hasSize(questions.size());
         assertThat(Path.of(jsonPath)).exists();
         assertThat(Path.of(mdPath)).exists();
+        assertThat(Path.of(htmlPath)).exists();
+    }
+
+    /**
+     * Git SHA resolution order: GIT_SHA env (host-injected by run-eval scripts)
+     * first, then a shelled git rev-parse, then "unknown". Tests run in a Maven
+     * container that doesn't have git installed, so the env path is the one
+     * that actually populates the SHA in container-based runs.
+     */
+    private static String resolveGitSha() {
+        String env = System.getenv("GIT_SHA");
+        if (env != null && !env.isBlank()) return env.strip();
+        try {
+            Process p = new ProcessBuilder("git", "rev-parse", "--short", "HEAD")
+                    .redirectErrorStream(true).start();
+            if (p.waitFor() == 0) {
+                String out = new String(p.getInputStream().readAllBytes()).strip();
+                if (!out.isEmpty()) return out;
+            }
+        } catch (Exception ignored) {
+            // git not installed, not in a repo, etc.
+        }
+        return "unknown";
     }
 
     @Test
