@@ -57,6 +57,22 @@ management:
     health:
       probes:
         enabled: true
+  # Phase 4 slice 2: OpenTelemetry tracing. Default = OFF (probability 0):
+  # the SDK builds non-recording spans, the BatchSpanProcessor is never
+  # invoked, the OTLP endpoint is never contacted, the request path takes
+  # no measurable hit, and a missing/unreachable collector cannot spam logs
+  # or block requests. Enable per-process by exporting:
+  #   MANAGEMENT_TRACING_SAMPLING_PROBABILITY=1.0
+  #   OTEL_EXPORTER_OTLP_ENDPOINT=http://your-collector:4318/v1/traces
+  # Slice 1's cost meters stay on actuator /metrics; an OTLP metrics
+  # pipeline is a later slice -- this one ships TRACES + the
+  # ai.cost.usd/ai.chat.calls/ai.tokens.* tags on the HTTP root span.
+  tracing:
+    sampling:
+      probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:0.0}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
 
 server:
   port: 8080

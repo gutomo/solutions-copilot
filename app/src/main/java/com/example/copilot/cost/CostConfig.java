@@ -2,6 +2,7 @@ package com.example.copilot.cost;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.tracing.Tracer;
 import org.springframework.boot.actuate.autoconfigure.observation.ObservationRegistryCustomizer;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -37,7 +38,7 @@ public class CostConfig {
     }
 
     @Bean
-    public CostRequestFilter costRequestFilter() {
-        return new CostRequestFilter();
+    public CostRequestFilter costRequestFilter(Tracer tracer) {
+        return new CostRequestFilter(tracer);
     }
 }

@@ -93,6 +93,24 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>
+
+        <!-- Phase 4 slice 2: OpenTelemetry tracing. Bridge converts the
+             existing ObservationRegistry's events (Boot HTTP + Spring AI
+             chat client / chat model / vector store / tool calls) into
+             OTel spans. OTLP exporter ships them to a collector via HTTP.
+             Both BOM-managed by Spring Boot 3.4 (no explicit versions).
+             Inert by default: management.tracing.sampling.probability=0
+             yields non-recording spans only, so the exporter is never
+             invoked, the collector is never contacted, requests answer
+             normally. -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-otel</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-otlp</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
