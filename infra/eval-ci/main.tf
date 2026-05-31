@@ -1,36 +1,17 @@
-# Phase 3 slice 5: CI identity for the eval workflow.
+# Eval-CI identity root. Owns ONLY the GitHub Actions OIDC provider, the
+# solutions-copilot-eval IAM role, and that role's Bedrock-only inline policy.
+# No running resources -- all three are free IAM constructs.
 #
-# Creates the GitHub Actions OIDC provider (idempotent: skip if your account
-# already has one from another repo) and a role this repo's eval workflow can
-# assume to call Bedrock. NO ECR / ECS / Secrets Manager permissions -- those
-# belong to the separate deploy role in iam.tf. NO running resources: OIDC
-# provider, IAM role, and inline policy are all free.
+# Moved out of the main infra/ root in Phase 3 cleanup so a bare `terraform
+# apply` in infra/ no longer accidentally touches free eval-CI plumbing and
+# vice versa. Resources were RELOCATED, not recreated -- the role ARN is
+# unchanged, and the eval workflow's EVAL_AWS_ROLE_ARN repo variable continues
+# to work.
 #
-# After `terraform apply`, paste the `eval_role_arn` output into the GitHub
-# repo variable EVAL_AWS_ROLE_ARN to flip on the eval workflow's `if:` guard.
-
-variable "create_github_oidc_provider" {
-  type        = bool
-  default     = true
-  description = <<-EOT
-    Set to false if your AWS account already has the GitHub Actions OIDC
-    provider from another repo. Find an existing one with:
-        aws iam list-open-id-connect-providers
-    Terraform will then attach the role to the existing provider via the
-    aws_iam_openid_connect_provider data source instead of trying to create a
-    duplicate (which would fail with EntityAlreadyExists).
-  EOT
-}
-
-variable "github_repo" {
-  type        = string
-  default     = "gutomo/solutions-copilot"
-  description = <<-EOT
-    owner/repo for the OIDC trust policy's `sub` allowlist. Change if you fork
-    -- the role is scoped to THIS repo only so a different repo's CI cannot
-    assume it.
-  EOT
-}
+# A future deploy-CI root that wants to use the same OIDC provider should
+# `data` it (set its own create_github_oidc_provider = false and reference
+# data.aws_iam_openid_connect_provider.github.arn) -- creating a duplicate
+# would conflict with this root's resource.
 
 # GitHub Actions OIDC provider. AWS now trusts this issuer's chain natively, so
 # the thumbprint list is belt-and-braces; both known thumbprints are included
@@ -132,14 +113,4 @@ resource "aws_iam_role_policy" "eval_bedrock" {
   name   = "eval-bedrock-invoke"
   role   = aws_iam_role.eval.id
   policy = data.aws_iam_policy_document.eval_bedrock.json
-}
-
-# ---- outputs --------------------------------------------------------------
-output "eval_role_arn" {
-  value       = aws_iam_role.eval.arn
-  description = <<-EOT
-    Paste this into the GitHub repo variable EVAL_AWS_ROLE_ARN to activate the
-    eval workflow. The workflow's `if:` guard reads that variable; when it's
-    set, runs fire on PR + nightly cron + workflow_dispatch.
-  EOT
 }

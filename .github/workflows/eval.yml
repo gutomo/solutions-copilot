@@ -28,11 +28,14 @@ on:
 #    and IAM checks InvokeModel on the foundation-model in the DESTINATION
 #    region. If you see AccessDenied after a CI run despite having us-east-1
 #    access, enable Haiku/Sonnet model access in us-east-2 and us-west-2 too.
-# 2. cd infra && terraform apply
-#    infra/cicd.tf creates the GitHub OIDC provider (idempotent; flip
-#    var.create_github_oidc_provider=false if you already have one) plus the
-#    solutions-copilot-eval IAM role with the Bedrock-only policy. Note the
-#    eval_role_arn output -- you need it for step 3.
+# 2. cd infra/eval-ci && terraform apply
+#    infra/eval-ci/ is a dedicated Terraform root that owns ONLY the GitHub
+#    OIDC provider (idempotent; flip var.create_github_oidc_provider=false if
+#    you already have one) and the solutions-copilot-eval IAM role with the
+#    Bedrock-only inline policy. Note the eval_role_arn output -- you need it
+#    for step 3. (Phase 3 cleanup moved these out of the main infra/ root so
+#    a bare apply in infra/ no longer entangles the free eval IAM with the
+#    prod stack.)
 # 3. GitHub repo -> Settings -> Secrets and variables -> Actions -> Variables
 #    -> set EVAL_AWS_ROLE_ARN to the role ARN from step 2.
 # Until step 3 lands, the job is skipped cleanly by the `if:` guard below
