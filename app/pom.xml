@@ -22,6 +22,9 @@
     <properties>
         <java.version>21</java.version>
         <spring-ai.version>1.0.8</spring-ai.version>
+        <!-- Phase 4 slice 3: Resilience4j is NOT managed by the Spring Boot 3.4
+             BOM. The 2.x line targets Boot 3 / Spring 6; pin it explicitly. -->
+        <resilience4j.version>2.2.0</resilience4j.version>
     </properties>
 
     <dependencyManagement>
@@ -110,6 +113,30 @@
         <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-exporter-otlp</artifactId>
+        </dependency>
+
+        <!-- Phase 4 slice 3: Resilience4j circuit breaker + retry around the
+             blocking chat call, so a throttle/outage on the primary Bedrock
+             model degrades to a fallback model instead of a 500. Build-only,
+             no infra cost. Brings resilience4j-circuitbreaker, -retry, and
+             spring-boot-starter-aop (the proxying the @CircuitBreaker /
+             @Retry annotations need) transitively. Version pinned above;
+             not in the Boot BOM. -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot3</artifactId>
+            <version>${resilience4j.version}</version>
+        </dependency>
+
+        <!-- Resilience4j's @CircuitBreaker / @Retry are AspectJ @Aspect beans.
+             resilience4j-spring-boot3 does NOT pull aspectjweaver, and without
+             it Boot's AopAutoConfiguration never enables @EnableAspectJAutoProxy,
+             so the breaker instance is created but the annotations are never
+             woven (the call bypasses the breaker). This starter brings
+             aspectjweaver and turns the proxying on. BOM-managed; build-only. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>

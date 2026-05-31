@@ -15,9 +15,11 @@ import reactor.core.publisher.Flux;
 public class ChatController {
 
     private final ChatClient chatClient;
+    private final ChatService chatService;
 
-    public ChatController(ChatClient chatClient) {
+    public ChatController(ChatClient chatClient, ChatService chatService) {
         this.chatClient = chatClient;
+        this.chatService = chatService;
     }
 
     public record ChatRequest(String message) {
@@ -26,14 +28,16 @@ public class ChatController {
     public record ChatResponse(String reply) {
     }
 
-    /** Blocking call - simplest proof that Bedrock + the task role work. */
+    /**
+     * Blocking call. Routed through {@link ChatService} (a separate bean) so the
+     * Resilience4j circuit breaker + fallback-model AOP advice fires -- a
+     * throttle/outage on the primary Bedrock model degrades to a fallback
+     * answer instead of a 500. On the happy path this is identical to a direct
+     * primary call.
+     */
     @PostMapping
     public ChatResponse chat(@RequestBody ChatRequest request) {
-        String reply = chatClient.prompt()
-                .user(request.message())
-                .call()
-                .content();
-        return new ChatResponse(reply);
+        return new ChatResponse(chatService.chat(request.message()));
     }
 
     /** Token streaming over Server-Sent Events - the basis for the Phase 1 UI. */

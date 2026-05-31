@@ -52,7 +52,10 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        # Phase 4 slice 3 adds circuitbreakers + circuitbreakerevents so the
+        # bedrock-chat breaker's state and CLOSED/OPEN/HALF_OPEN transitions
+        # are observable over HTTP.
+        include: health,info,metrics,circuitbreakers,circuitbreakerevents
   endpoint:
     health:
       probes:
@@ -97,3 +100,54 @@ copilot:
       "[us.anthropic.claude-sonnet-4-6]":
         input-per-1k:  0.003
         output-per-1k: 0.015
+  # Phase 4 slice 3: the SECOND Bedrock model the circuit breaker falls back to
+  # when the primary (spring.ai.bedrock.converse.chat.options.model) is failing.
+  # MUST be a genuinely different model id AND have a rate in copilot.cost.rates
+  # above -- otherwise the fallback's cost call hits slice 1's loud unknown-model
+  # WARN (billed $0) instead of being properly accounted. Default = the jp.
+  # Haiku profile (data-residency theme); override per-process with
+  # BEDROCK_FALLBACK_MODEL.
+  chat:
+    fallback-model: ${BEDROCK_FALLBACK_MODEL:jp.anthropic.claude-haiku-4-5-20251001-v1:0}
+
+# Phase 4 slice 3: Resilience4j circuit breaker + bounded retry around the
+# blocking POST /api/chat call (ChatService.chat). Thresholds live here, not in
+# code. The breaker trips on primary-side faults a fallback model can cure and
+# stays closed on request-content faults -- the record vs ignore decision walks
+# the cause chain in BedrockFailurePredicate (record-exceptions/ignore-exceptions
+# only match the THROWN type, which misses a wrapped SDK exception).
+resilience4j:
+  # Aspect order follows Spring's Ordered: LOWER value = higher precedence =
+  # OUTER. CircuitBreaker (1) wraps Retry (2), so the bounded retry on a
+  # transient primary fault is INNER -- one logical request counts as ONE
+  # breaker call after the retry exhausts, and when the breaker is OPEN it
+  # short-circuits BEFORE the retry runs (no wasted retries on an open breaker).
+  circuitbreaker:
+    circuit-breaker-aspect-order: 1
+    instances:
+      bedrock-chat:
+        register-health-indicator: true
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5        # don't compute a rate on fewer than this
+        failure-rate-threshold: 50         # >=50% failures over the window -> OPEN
+        wait-duration-in-open-state: 10s    # short, so recovery is observable in the proof
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        record-failure-predicate: com.example.copilot.chat.BedrockFailurePredicate
+  retry:
+    retry-aspect-order: 2          # > circuit-breaker-aspect-order => Retry is INNER
+    instances:
+      bedrock-chat:
+        max-attempts: 2                    # one bounded retry before a failure counts
+        wait-duration: 200ms
+        # Retry only the fallback-curable transient faults. A bad request or
+        # an access-denied won't get better on retry, so don't waste a call.
+        retry-exceptions:
+          - software.amazon.awssdk.services.bedrockruntime.model.ThrottlingException
+          - software.amazon.awssdk.services.bedrockruntime.model.InternalServerException
+          - software.amazon.awssdk.services.bedrockruntime.model.ModelNotReadyException
+          - software.amazon.awssdk.services.bedrockruntime.model.ModelTimeoutException
+          - software.amazon.awssdk.services.bedrockruntime.model.ServiceQuotaExceededException
+          - software.amazon.awssdk.services.bedrockruntime.model.ModelErrorException
+          - software.amazon.awssdk.core.exception.SdkClientException
