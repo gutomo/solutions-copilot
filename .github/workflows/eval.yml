@@ -18,26 +18,29 @@ on:
   schedule:
     - cron: "0 17 * * *"   # 17:00 UTC / 02:00 JST nightly
 
-# SETUP REQUIRED in GitHub before this workflow does anything:
+# SETUP REQUIRED (the three steps that activate this workflow):
 # 1. Request Bedrock model access in us-east-1 for ALL THREE:
-#    - anthropic.claude-haiku-4-5-20251001-v1:0   (the subject; same as deploy)
+#    - anthropic.claude-haiku-4-5-20251001-v1:0   (the subject)
 #    - anthropic.claude-sonnet-4-6                (the judge; SEPARATE grant)
-#    - amazon.titan-embed-text-v2:0               (embeddings; same as deploy)
+#    - amazon.titan-embed-text-v2:0               (embeddings)
 #    Each is a separate per-model toggle in the Bedrock console.
-# 2. Create a GitHub OIDC provider in AWS IAM if one doesn't exist
-#    (token.actions.githubusercontent.com).
-# 3. Create an IAM role `solutions-copilot-eval` trusting this repo's OIDC
-#    (sub: repo:<owner>/<repo>:*) with permissions:
-#      bedrock:InvokeModel + bedrock:InvokeModelWithResponseStream on:
-#        arn:aws:bedrock:*::foundation-model/anthropic.claude-haiku-4-5-*
-#        arn:aws:bedrock:*::foundation-model/anthropic.claude-sonnet-4-6*
-#        arn:aws:bedrock:*::foundation-model/amazon.titan-embed-text-v2*
-#        arn:aws:bedrock:*::inference-profile/us.anthropic.claude-haiku-4-5-*
-#        arn:aws:bedrock:*::inference-profile/us.anthropic.claude-sonnet-4-6*
-#    (separate from the deploy role -- eval needs Sonnet + Titan, deploy doesn't)
-# 4. Set repo variable `EVAL_AWS_ROLE_ARN` to the role's ARN.
-# Until step 4 lands, the job is skipped cleanly by the `if:` guard below
+#    Heads-up: us. inference profiles route across us-east-1/us-east-2/us-west-2
+#    and IAM checks InvokeModel on the foundation-model in the DESTINATION
+#    region. If you see AccessDenied after a CI run despite having us-east-1
+#    access, enable Haiku/Sonnet model access in us-east-2 and us-west-2 too.
+# 2. cd infra && terraform apply
+#    infra/cicd.tf creates the GitHub OIDC provider (idempotent; flip
+#    var.create_github_oidc_provider=false if you already have one) plus the
+#    solutions-copilot-eval IAM role with the Bedrock-only policy. Note the
+#    eval_role_arn output -- you need it for step 3.
+# 3. GitHub repo -> Settings -> Secrets and variables -> Actions -> Variables
+#    -> set EVAL_AWS_ROLE_ARN to the role ARN from step 2.
+# Until step 3 lands, the job is skipped cleanly by the `if:` guard below
 # (same pattern as deploy.yml).
+#
+# Cost: each run does ~40-60 Bedrock calls (~$0.20-0.40 on Sonnet judge).
+# Triggers: PR + nightly cron + workflow_dispatch. Drop the cron in the `on:`
+# block above if you want PR + dispatch only.
 
 permissions:
   id-token: write

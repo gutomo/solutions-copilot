@@ -16,6 +16,7 @@ target/
 .terraform/
 *.tfstate
 *.tfstate.*
+*.tfplan
 crash.log
 *.tfvars
 !*.tfvars.example
