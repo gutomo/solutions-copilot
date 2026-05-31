@@ -34,5 +34,5 @@ perItemFaithfulness: {floor: 60,   hard: true}
 meanCitationF1:      {floor: 0.85, hard: true}
 meanRetrievalRecall: {floor: 0.90, hard: true}
 meanCorrectness:     {floor: 0.85, hard: true}
-meanRelevance:       {floor: 80,   hard: true}     # slice 3: promoted to HARD after the context-aware fix
+meanRelevance:       {floor: 99,   hard: true}     # PROVE-GATE-BITES: deliberately too tight; observed ~97, this MUST fail the gate
 judgeParseFailures:  {ceiling: 2,  hard: true}
