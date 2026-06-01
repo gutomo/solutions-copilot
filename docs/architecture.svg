@@ -1,0 +1,72 @@
+<svg viewBox="0 0 760 545" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="ttl dsc" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+  <title id="ttl">Solutions Copilot — architecture</title>
+  <desc id="dsc">A request enters through Spring Security (API-key auth and per-key rate limiting), passes a ChatService wrapped in a Resilience4j circuit breaker with a fallback model, runs the Spring AI agentic loop (RAG over pgvector plus agent tools, multi-step) against Amazon Bedrock Claude Haiku 4.5, and reads Postgres+pgvector embedded by Titan v2. A separate ingest path guards documents with a prompt-injection scanner. Per-request cost accounting and OpenTelemetry tracing observe every request; a CI eval gate measures answer quality and is proven to fail on regressions.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#9a978d"/>
+    </marker>
+    <style>
+      .box{fill:#ffffff;stroke:#c8c6bd;stroke-width:1.5}
+      .accent{fill:#ffffff;stroke:#2563eb;stroke-width:2}
+      .t1{fill:#1a1a1a;font-size:14.5px;font-weight:650;text-anchor:middle}
+      .t2{fill:#6b6b6b;font-size:11.5px;text-anchor:middle}
+      .flow{stroke:#9a978d;stroke-width:1.6;fill:none;marker-end:url(#arr)}
+      .dash{stroke:#2563eb;stroke-width:1.2;stroke-dasharray:4 3;fill:none;opacity:.8}
+      .lbl{fill:#6b6b6b;font-size:10.5px}
+    </style>
+  </defs>
+
+  <rect class="box" x="290" y="16" width="180" height="32" rx="8"/>
+  <text class="t1" x="380" y="37" font-size="13">Client &#183; X-API-Key</text>
+  <path class="flow" d="M380 48 L380 64"/>
+
+  <rect class="box" x="270" y="66" width="220" height="52" rx="9"/>
+  <text class="t1" x="380" y="89">Spring Security</text>
+  <text class="t2" x="380" y="106">auth &#183; per-key rate limit</text>
+  <path class="flow" d="M380 118 L380 148"/>
+
+  <rect class="accent" x="270" y="150" width="220" height="52" rx="9"/>
+  <text class="t1" x="380" y="173">ChatService</text>
+  <text class="t2" x="380" y="190">circuit breaker &#183; fallback</text>
+  <path class="flow" d="M380 202 L380 232"/>
+
+  <rect class="box" x="270" y="234" width="220" height="52" rx="9"/>
+  <text class="t1" x="380" y="257">Spring AI &#8212; agentic loop</text>
+  <text class="t2" x="380" y="274">RAG + tools, multi-step</text>
+  <path class="flow" d="M380 286 L380 316"/>
+
+  <rect class="box" x="270" y="318" width="220" height="52" rx="9"/>
+  <text class="t1" x="380" y="341">Amazon Bedrock</text>
+  <text class="t2" x="380" y="358">Claude Haiku 4.5 + fallback</text>
+  <path class="flow" d="M380 370 L380 400"/>
+
+  <rect class="box" x="270" y="402" width="220" height="52" rx="9"/>
+  <text class="t1" x="380" y="425">Postgres + pgvector</text>
+  <text class="t2" x="380" y="442">Titan Embeddings v2</text>
+
+  <rect class="box" x="26" y="150" width="190" height="46" rx="9"/>
+  <text class="t1" x="121" y="170" font-size="13">POST /api/documents</text>
+  <text class="t2" x="121" y="187">ingest</text>
+  <path class="flow" d="M121 196 L121 232"/>
+  <rect class="accent" x="26" y="234" width="190" height="46" rx="9"/>
+  <text class="t1" x="121" y="254" font-size="13">Injection scanner</text>
+  <text class="t2" x="121" y="271">reject on match</text>
+  <path class="flow" d="M121 280 L121 428 L268 428"/>
+  <text class="lbl" x="132" y="408">chunk &#183; embed &#183; store</text>
+
+  <rect class="box" x="544" y="150" width="192" height="52" rx="9"/>
+  <text class="t1" x="640" y="173">Observability</text>
+  <text class="t2" x="640" y="190">cost &#183; OpenTelemetry</text>
+  <path class="dash" d="M490 176 L544 176"/>
+
+  <rect class="accent" x="544" y="318" width="192" height="52" rx="9"/>
+  <text class="t1" x="640" y="341">Eval gate &#183; CI</text>
+  <text class="t2" x="640" y="358">proven to fail on regress</text>
+  <path class="dash" d="M490 344 L544 344"/>
+  <path class="dash" d="M515 176 L515 344"/>
+
+  <line x1="272" y1="500" x2="300" y2="500" class="flow"/>
+  <text class="lbl" x="306" y="504">request path</text>
+  <rect class="accent" x="430" y="494" width="22" height="12" rx="3"/>
+  <text class="lbl" x="460" y="504">accent = Phase 3&#8211;4: measurement &amp; hardening</text>
+</svg>
