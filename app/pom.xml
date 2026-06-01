@@ -49,6 +49,14 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- Phase 4 slice 4: API-key authentication + per-key rate limiting in
+             front of /api/** and the non-health actuator endpoints. Build-only;
+             no new infra. Stateless, header-based (X-API-Key) - no IdP. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
         <!-- Bedrock Converse: unified chat + tool calling + streaming.
              Credentials are resolved by the AWS default provider chain
              (i.e. the ECS task role at runtime) - no keys in config. -->

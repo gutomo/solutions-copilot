@@ -84,10 +84,18 @@ After this, CI handles subsequent pushes on every commit to `main`.
 ```bash
 URL=$(cd infra && terraform output -raw alb_url)
 
+# /actuator/health is public (the ALB/ECS probe hits it unauthenticated).
 curl "$URL/actuator/health"          # {"status":"UP"}
+
+# Everything under /api/** now requires an API key (Phase 4 slice 4). Set a
+# matching value via the API_KEY_CLIENT_A env var on the service; without a
+# valid X-API-Key header these return 401, and over the per-key limit they
+# return 429 + Retry-After.
+KEY=$API_KEY_CLIENT_A
 
 # Ingest a document.
 curl -X POST "$URL/api/documents" \
+  -H "X-API-Key: $KEY" \
   -H 'content-type: application/json' \
   -d '{
     "source": "internal-policy-2026-Q2",
@@ -97,11 +105,12 @@ curl -X POST "$URL/api/documents" \
 
 # Ask a question whose answer lives only in that document.
 curl -X POST "$URL/api/chat" \
+  -H "X-API-Key: $KEY" \
   -H 'content-type: application/json' \
   -d '{"message":"What is our CSP margin floor for Premier-tier resellers on Azure consumption? Cite the source."}'
 # -> reply quotes 17.4 percent and cites internal-policy-2026-Q2
 
-curl -N "$URL/api/chat/stream?message=Summarise%20Premier-tier%20Azure%20margin%20rules"
+curl -N -H "X-API-Key: $KEY" "$URL/api/chat/stream?message=Summarise%20Premier-tier%20Azure%20margin%20rules"
 ```
 
 ## Cost & teardown
@@ -115,10 +124,14 @@ cd infra && terraform destroy
 
 ## Notes
 
-- **Auth.** `/api/chat`, `/api/chat/stream`, and `/api/documents` are public
-  and unauthenticated. Ingestion is the more dangerous of the three because
-  it persists content the retrieval advisor will later quote — don't expose
-  the ALB beyond a smoke test until auth lands in Phase 4.
+- **Auth + rate limiting (Phase 4 slice 4).** `/api/**` requires a valid
+  `X-API-Key` header (keys are config; secret values come from the environment,
+  e.g. `API_KEY_CLIENT_A`); missing/blank/unknown keys get 401. Each key is
+  rate-limited independently (429 + `Retry-After` over the limit). `/actuator/health`
+  stays public for the ALB/ECS probe; the rest of `/actuator/**` (metrics,
+  circuitbreakers, info) requires a key. Rate limiting is in-memory per
+  instance for now — a distributed (Redis) limiter across replicas is a later
+  concern. Prompt-injection defense on ingested content is slice 5.
 - **Japan data residency.** Deploy in `ap-northeast-1` and switch the chat
   model to a `jp.` inference profile (e.g.
   `jp.anthropic.claude-haiku-4-5-20251001-v1:0`) to keep inference within

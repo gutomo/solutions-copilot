@@ -2,6 +2,12 @@ spring:
   application:
     name: solutions-copilot
 
+  # Phase 4 slice 4: this is a stateless API-key API; suppress Boot's default
+  # in-memory user + generated security password (we authenticate via a custom
+  # X-API-Key filter, see com.example.copilot.security).
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:copilot}
     username: ${DB_USERNAME:copilot}
@@ -109,6 +115,22 @@ copilot:
   # BEDROCK_FALLBACK_MODEL.
   chat:
     fallback-model: ${BEDROCK_FALLBACK_MODEL:jp.anthropic.claude-haiku-4-5-20251001-v1:0}
+
+  # Phase 4 slice 4: API-key auth + per-key rate limiting in front of /api/**.
+  # Key NAMES live here (not secrets); secret VALUES come from the environment
+  # (Secrets Manager later), never hardcoded. A slot with a blank value is
+  # DISABLED -- so a blank/whitespace credential can never match an empty slot.
+  # Add more clients by adding named slots. Multiple keys enable per-key rate
+  # limiting + rotation.
+  security:
+    api-keys:
+      client-a: ${API_KEY_CLIENT_A:}
+      client-b: ${API_KEY_CLIENT_B:}
+    # Per-principal token bucket: limit-for-period permits every refresh-period.
+    # In-memory / per-instance this slice (distributed/Redis limiting later).
+    rate-limit:
+      limit-for-period: ${RATE_LIMIT_PER_PERIOD:60}
+      limit-refresh-period: ${RATE_LIMIT_REFRESH_PERIOD:60s}
 
 # Phase 4 slice 3: Resilience4j circuit breaker + bounded retry around the
 # blocking POST /api/chat call (ChatService.chat). Thresholds live here, not in
