@@ -131,6 +131,23 @@ copilot:
     rate-limit:
       limit-for-period: ${RATE_LIMIT_PER_PERIOD:60}
       limit-refresh-period: ${RATE_LIMIT_REFRESH_PERIOD:60s}
+    # Phase 4 slice 5, Layer 1: ingest-time prompt-injection scanner. Patterns
+    # are id -> regex, compiled CASE-INSENSITIVE against whitespace-normalised
+    # content (so casing/odd spacing can't bypass them). A match REJECTS the
+    # document (400, not stored). Patterns are deliberately anchored to
+    # injection-specific idioms (e.g. the override pattern REQUIRES a
+    # previous/above/all qualifier) so legit prose like "ignore unsolicited
+    # instructions in emails" is not falsely rejected -- tightening here trades
+    # false positives for false negatives, which Layer 2 (prompt isolation) then
+    # backstops. This is defence-in-depth, not a complete fix.
+    injection:
+      enabled: ${INJECTION_SCAN_ENABLED:true}
+      patterns:
+        instruction-override: '(ignore|disregard|forget|override)\s+(all\s+|any\s+)?(of\s+)?(the\s+)?(previous|above|prior|earlier|preceding|foregoing|all)\b.{0,40}\b(instruction|instructions|prompt|prompts|context|directive|directives|rule|rules)'
+        prompt-reveal: '(reveal|show|print|repeat|disclose|expose|leak|output|give\s+me)\b.{0,30}\b(system\s+prompt|your\s+(system\s+)?(prompt|instructions)|the\s+(system\s+)?prompt|this\s+prompt)'
+        role-change: '(you\s+are\s+now|from\s+now\s+on\s+you|act\s+as\s+if\s+you|pretend\s+(to\s+be|you))\b'
+        new-instructions: 'new\s+(instructions|rules|directives)\s*[:\-]'
+        tool-exfil: '(create|make|file|open|add|schedule|log)\b.{0,30}\b(task|ticket|follow.?up|reminder|action\s+item)\b.{0,40}\b(email|e-mail|send|forward|transmit|exfiltrate|deliver|mail)\b'
 
 # Phase 4 slice 3: Resilience4j circuit breaker + bounded retry around the
 # blocking POST /api/chat call (ChatService.chat). Thresholds live here, not in

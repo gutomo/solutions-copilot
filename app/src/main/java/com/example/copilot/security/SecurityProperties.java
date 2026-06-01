@@ -17,11 +17,25 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * unconfigured slot -- the classic empty-credential bypass.
  */
 @ConfigurationProperties("copilot.security")
-public record SecurityProperties(Map<String, String> apiKeys, RateLimit rateLimit) {
+public record SecurityProperties(Map<String, String> apiKeys, RateLimit rateLimit, Injection injection) {
 
     public SecurityProperties {
         apiKeys = apiKeys == null ? Map.of() : apiKeys;
         rateLimit = rateLimit == null ? new RateLimit(0, null) : rateLimit;
+        injection = injection == null ? new Injection(true, Map.of()) : injection;
+    }
+
+    /**
+     * Phase 4 slice 5: ingest-time prompt-injection scanner (Layer 1). The
+     * {@code patterns} map is id -> regex; patterns live in config, never
+     * hardcoded, and are compiled case-insensitively in
+     * {@link InjectionScanner}. {@code enabled=false} disables the scanner (the
+     * Layer-2 prompt isolation still applies).
+     */
+    public record Injection(boolean enabled, Map<String, String> patterns) {
+        public Injection {
+            patterns = patterns == null ? Map.of() : patterns;
+        }
     }
 
     /**
